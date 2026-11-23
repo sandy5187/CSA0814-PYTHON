@@ -1,1 +1,86 @@
 
+import time
+
+def normalize_phone(phone):
+    phone = "".join(c for c in str(phone) if c.isdigit())
+    if len(phone) == 12 and phone.startswith("91"):
+        phone = phone[2:]
+    return phone if len(phone) == 10 else ""
+
+
+def merge_contacts(data):
+    merged = {}
+
+    for source, contacts in data.items():
+        for contact in contacts:
+            name = contact.get("name", "")
+            phones = contact.get("phones", [])
+            emails = contact.get("emails", [])
+
+            if isinstance(phones, str):
+                phones = [phones]
+            if isinstance(emails, str):
+                emails = [emails]
+
+            numbers = [normalize_phone(p) for p in phones]
+            numbers = [p for p in numbers if p]
+
+            if not numbers:
+                continue
+
+            key = numbers[0]
+
+            if key not in merged:
+                merged[key] = {
+                    "names": set(),
+                    "phones": set(),
+                    "emails": set(),
+                    "sources": set()
+                }
+
+            merged[key]["names"].add(name)
+            merged[key]["phones"].update(numbers)
+            merged[key]["emails"].update(
+                e.strip().lower() for e in emails if "@" in e
+            )
+            merged[key]["sources"].add(source)
+
+    return merged
+
+
+def main():
+    data = {
+        "Phone 1": [
+            {"name": "Ravi", "phones": ["9840012345"],
+             "emails": ["ravi@gmail.com"]},
+            {"name": "Anita", "phones": ["9876543210"],
+             "emails": ["anita@gmail.com"]}
+        ],
+        "Phone 2": [
+            {"name": "Ravi Kumar", "phones": ["+91 98400 12345"],
+             "emails": ["ravi@gmail.com"]},
+            {"name": "Meena", "phones": ["9444455555"],
+             "emails": ["meena@gmail.com"]}
+        ]
+    }
+
+    start = time.perf_counter()
+    result = merge_contacts(data)
+
+    print("MERGED CONTACT LIST")
+
+    for phone, contact in result.items():
+        print("\nName:", contact["names"])
+        print("Phone:", contact["phones"])
+        print("Email:", contact["emails"])
+        print("Source:", contact["sources"])
+
+    print("\nTime:", round(time.perf_counter() - start, 6), "seconds")
+
+    assert len(result) == 3
+    print("Validation: PASSED")
+
+
+if __name__ == "__main__":
+    main()
+
