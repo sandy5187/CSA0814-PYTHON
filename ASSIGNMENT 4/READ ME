@@ -1,1 +1,69 @@
 
+import csv
+
+data = {
+    "CSE": [
+        "101;Ravi;ravi@gmail.com;Sports,Music",
+        "102;Anu;anu@gmail.com;Music"
+    ],
+    "ECE": [
+        "103;Kumar;kumar@gmail.com;Sports",
+        "104;Priya;priya@gmail.com;Dance"
+    ],
+    "IT": [
+        "105;Arun;arun@gmail.com;Music",
+        "101;Ravi;ravi@gmail.com;Sports"
+    ]
+}
+
+master = []
+registers = set()
+events = {}
+errors = []
+
+for dept, lines in data.items():
+    for line in lines:
+        fields = line.split(";")
+
+        if len(fields) != 4:
+            errors.append("Invalid data")
+            continue
+
+        reg, name, email, selected = fields
+
+        if not reg or not name or "@" not in email:
+            errors.append("Invalid details")
+            continue
+
+        if reg in registers:
+            errors.append("Duplicate register: " + reg)
+            continue
+
+        registers.add(reg)
+        record = [reg, name, email, dept]
+        master.append(record)
+
+        for event in selected.split(","):
+            event = event.strip()
+            if event:
+                events.setdefault(event, []).append(record)
+
+print("MASTER LIST")
+for record in master:
+    print(record)
+
+print("\nEVENT PARTICIPANTS")
+for event, people in events.items():
+    print(event, ":", [p[1] for p in people])
+
+print("\nERROR LOG")
+for error in errors:
+    print(error)
+
+print("\nSUMMARY")
+print("Total students:", len(master))
+print("Total events:", len(events))
+print("Total errors:", len(errors))
+
+print("\nProgram completed successfully!")
+
