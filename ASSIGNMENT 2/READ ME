@@ -1,1 +1,58 @@
 
+import time
+
+def ways_plain(n):
+    if n < 0:
+        raise ValueError("Invalid input")
+    if n <= 1:
+        return n
+    return ways_plain(n-1) + ways_plain(n-2)
+
+
+def ways_memo(n, cache={}):
+    if n < 0:
+        raise ValueError("Invalid input")
+    if n not in cache:
+        if n <= 1:
+            cache[n] = n
+        else:
+            cache[n] = ways_memo(n-1, cache) + ways_memo(n-2, cache)
+    return cache[n]
+
+
+def ways_loop(n):
+    if n < 0:
+        raise ValueError("Invalid input")
+    a, b = 0, 1
+    for i in range(n):
+        a, b = b, a+b
+    return a
+
+
+def main():
+    n = 20
+
+    for name, function in [
+        ("Plain Recursion", ways_plain),
+        ("Memoisation", ways_memo),
+        ("Loop", ways_loop)
+    ]:
+        start = time.time()
+        result = function(n)
+        print(name, "Result:", result)
+        print("Time:", time.time() - start)
+
+    print("\nTest for n = 1000")
+    result = ways_loop(1000)
+    print("Number of digits:", len(str(result)))
+
+    assert ways_memo(20) == ways_loop(20)
+    print("Validation: PASSED")
+
+    print("\nFinal Decision")
+    print("Use iterative loop for large numbers.")
+
+
+if __name__ == "__main__":
+    main()
+
