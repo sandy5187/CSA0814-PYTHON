@@ -1,1 +1,119 @@
 
+import sqlite3
+import time
+import re
+from collections import Counter
+
+positive = ["good", "happy", "excellent", "helpful"]
+negative = ["bad", "poor", "slow", "late", "worst"]
+negators = ["not", "no", "never"]
+
+def score(text):
+    words = text.lower().split()
+    total = 0
+
+    for i, word in enumerate(words):
+        word = re.sub(r"[^a-z]", "", word)
+
+        if word in positive:
+            value = 1
+        elif word in negative:
+            value = -1
+        else:
+            continue
+
+        if i > 0 and words[i-1] in negators:
+            value = -value
+
+        total += value
+
+    return total
+
+
+def label(value):
+    if value > 0:
+        return "positive"
+    elif value < 0:
+        return "negative"
+    return "neutral"
+
+
+complaints = [
+    "good service", "bad service", "happy customer",
+    "poor delivery", "excellent support",
+    "not good", "slow service", "helpful staff",
+    "late delivery", "not bad"
+] * 5
+
+manual = [
+    "positive", "negative", "positive", "negative",
+    "positive", "negative", "negative", "positive",
+    "negative", "positive"
+] * 5
+
+print("SENTIMENT ANALYSIS")
+
+predictions = [label(score(c)) for c in complaints]
+
+correct = sum(a == b for a, b in zip(predictions, manual))
+accuracy = correct / len(manual) * 100
+
+print("Total complaints:", len(complaints))
+print("Correct predictions:", correct)
+print("Accuracy:", accuracy, "%")
+
+
+print("\nSUMMARY")
+
+print("First summary:", ". ".join(complaints[:3]))
+
+words = re.findall(r"[a-z]+", " ".join(complaints).lower())
+print("Important words:", Counter(words).most_common(5))
+
+
+print("\nDATABASE TEST")
+
+db = sqlite3.connect(":memory:")
+cur = db.cursor()
+
+cur.execute("CREATE TABLE complaints (id, station, day)")
+
+cur.executemany(
+    "INSERT INTO complaints VALUES (?, ?, ?)",
+    [(i, "S" + str(i % 10), "D" + str(i % 7))
+     for i in range(50000)]
+)
+
+db.commit()
+
+query = "SELECT * FROM complaints WHERE station='S1' AND day='D1'"
+
+start = time.time()
+cur.execute(query).fetchall()
+before = time.time() - start
+
+cur.execute("CREATE INDEX idx ON complaints(station, day)")
+
+start = time.time()
+cur.execute(query).fetchall()
+after = time.time() - start
+
+print("Before index:", before)
+print("After index:", after)
+
+print("\nRECOMMENDATION")
+
+if accuracy >= 80:
+    print("Sentiment accuracy is good.")
+else:
+    print("Improve sentiment accuracy.")
+
+if after < before:
+    print("Index improves database speed.")
+else:
+    print("Index did not improve measured speed.")
+
+print("Check important complaints manually.")
+
+db.close()
+
