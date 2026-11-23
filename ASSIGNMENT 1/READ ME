@@ -1,1 +1,72 @@
 
+from decimal import Decimal
+
+def calculate_payment(fat, snf, month, ten_day_litres):
+
+    if month not in [4, 5, 6]:
+        raise ValueError("Rate not available for this month")
+
+    try:
+        fat = Decimal(fat)
+        snf = Decimal(snf)
+        litres = Decimal(ten_day_litres)
+    except:
+        raise ValueError("Invalid input")
+
+    rate = Decimal("40.00")
+    payment = litres * rate
+
+    if litres > 500:
+        bonus = litres * Decimal("0.50")
+    else:
+        bonus = Decimal("0.00")
+
+    return {
+        "payment": payment,
+        "bonus": bonus,
+        "total": payment + bonus
+    }
+
+
+def display_result(title, result):
+    print("\n", title)
+    print("Payment:", result["payment"])
+    print("Bonus:", result["bonus"])
+    print("Total:", result["total"])
+
+
+def run_tests():
+
+    print("TASK 12 - MILK RATE DESIGN TESTS")
+
+    april = calculate_payment("4.20", "8.60", 4, "520.00")
+    display_result("TEST 1: APRIL", april)
+
+    june = calculate_payment("3.80", "8.50", 6, "500.00")
+    display_result("TEST 2: JUNE", june)
+
+    below = calculate_payment("4.00", "8.55", 4, "450.00")
+    display_result("TEST 3: BELOW BONUS", below)
+
+    print("\nTEST 4: INVALID MONTH")
+    try:
+        calculate_payment("4.20", "8.60", 10, "520.00")
+    except ValueError as e:
+        print("Correctly handled:", e)
+
+    print("\nTEST 5: INVALID FAT")
+    try:
+        calculate_payment("four", "8.60", 4, "520.00")
+    except ValueError as e:
+        print("Correctly handled:", e)
+
+    assert april["bonus"] == Decimal("260.00")
+    assert june["bonus"] == Decimal("0.00")
+    assert below["bonus"] == Decimal("0.00")
+
+    print("\nAll tests passed!")
+
+
+if __name__ == "__main__":
+    run_tests()
+
